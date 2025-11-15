@@ -4,7 +4,7 @@
 source venv/bin/activate
 
 # Arrancar servidor
-uvicorn app.main:app --reload --port 8000
+uvicorn main:app --reload --port 8000
 
 # Comando alternativo si el archivo main.py está en el directorio raíz
 uvicorn main:app --reload

@@ -9,7 +9,7 @@ router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 @router.post("/")
 def create_metric(metric: MetricCreate, db: Session = Depends(get_db)):
-    # Create a new metric in the database
+    # Create a new metric in the databasegf
     new_metric = Metric(**metric.dict())
     # Add the new metric to the database session
     db.add(new_metric)
@@ -22,9 +22,15 @@ def create_metric(metric: MetricCreate, db: Session = Depends(get_db)):
     
     
 @router.get("/")
-def list_metrics():
-    pass
+def list_metrics(metric = Depends(MetricCreate), db: Session = Depends(get_db)):
+    return db.query(Metric).all()
 
 @router.delete("/{id}")
-def delete_metric():
-    pass
+def delete_metric(id: int, db: Session = Depends(get_db)):
+    metric = db.query(Metric).filter(Metric.id == id).first()
+    if metric is None:
+        return {"Error 404: Metric not found"}
+    else:
+        db.delete(metric)
+        db.commit()
+        return {"Success: Metric deleted"}

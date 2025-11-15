@@ -7,7 +7,8 @@ API para rastrear métricas personales.
 1. Crear entorno virtual:
 ```bash
 python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+source venv/bin/activate 
+ # En Windows: venv\Scripts\activate
 ```
 
 2. Instalar dependencias:
