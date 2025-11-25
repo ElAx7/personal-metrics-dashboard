@@ -1,44 +1,41 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models_base import Metric
-from app.schemas.metric import MetricCreate
-
+from app.schemas.metric import MetricCreate, MetricUpdate
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
+
+# -------- CREATE --------
 @router.post("/")
 def create_metric(metric: MetricCreate, db: Session = Depends(get_db)):
-    # Create a new metric in the database
-    new_metric = Metric(**metric.dict())
-    # Add the new metric to the database session
+    new_metric = Metric(**metric.model_dump())
     db.add(new_metric)
-    # Commit the session to save the metric
     db.commit()
-    # Refresh the instance to get the updated data
     db.refresh(new_metric)
-    # Return the newly created metric
     return new_metric
-    
-    
+
+
+# -------- LIST --------
 @router.get("/")
-def list_metrics(metric = Depends(MetricCreate), db: Session = Depends(get_db)):
+def list_metrics(db: Session = Depends(get_db)):
     return db.query(Metric).all()
 
+
+# -------- FILTER --------
 @router.get("/filter")
 def filter_metrics(
     category: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     query = db.query(Metric)
 
-    # Filtrar por categoría
     if category:
         query = query.filter(Metric.category == category)
 
-    # Filtrar por rangos
     if start_date:
         query = query.filter(Metric.datetime >= start_date)
 
@@ -47,26 +44,42 @@ def filter_metrics(
 
     return query.all()
 
-@router.put("/metrics/{id}")
-def metricUpdate(id: int, db: Session = Depends(get_db)):
-    #Busca la metrica en la base de datos
-    find_metric = db.query(Metric)
-    #Recibe datos opcionales por body
-    
-    #Actualiza solo los campos enviados
 
-    #Guarda solo los campos enviados
+# -------- GET ONE --------
+@router.get("/{id}")
+def get_metric(id: int, db: Session = Depends(get_db)):
+    metric = db.query(Metric).filter(Metric.id == id).first()
+    if not metric:
+        raise HTTPException(status_code=404, detail="Metric not found")
+    return metric
 
-    #Guarda los cambios
+
+# -------- UPDATE --------
+@router.put("/{id}")
+def update_metric(id: int, data: MetricUpdate, db: Session = Depends(get_db)):
+    metric = db.query(Metric).filter(Metric.id == id).first()
+
+    if not metric:
+        raise HTTPException(status_code=404, detail="Metric not found")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(metric, key, value)
+
     db.commit()
-    #Devuelva la metrica actualizada
+    db.refresh(metric)
+    return metric
 
+
+# -------- DELETE --------
 @router.delete("/{id}")
 def delete_metric(id: int, db: Session = Depends(get_db)):
     metric = db.query(Metric).filter(Metric.id == id).first()
-    if metric is None:
-        return {"HTTP 404 Not Found"}
-    else:
-        db.delete(metric)
-        db.commit()
-        return {"Success: Metric deleted"}
+
+    if not metric:
+        raise HTTPException(status_code=404, detail="Metric not found")
+
+    db.delete(metric)
+    db.commit()
+    
+    return {"detail": "Metric deleted"}
