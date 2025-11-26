@@ -1,7 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, Date
 from app.db.base import Base
 
-# Define the Metric model
+# ======================
+#  Modelo Metric
+# ======================
 class Metric(Base):
     __tablename__ = "metrics"
 

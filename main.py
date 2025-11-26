@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from app.routers import health, metrics, auth
-from app.routers import auth
-
 
 app = FastAPI(
     title="Personal Metrics Dashboard",
